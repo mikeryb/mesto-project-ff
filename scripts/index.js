@@ -20,8 +20,8 @@ function addCard(name, link, del) {
   return card;
 }
 
-function deleteCard(e) {
-  e.remove();
+function deleteCard(element) {
+  element.remove();
 }
 
 initialCards.forEach(function (loadContent) {
