@@ -12,7 +12,7 @@ import "../pages/index.css";
 import { addCard, deleteCard  } from "./components/card.js";
 import { openModal, closeModal, addCloseEvents } from "./components/modal.js";
 import { enableValidation, clearValidation } from "./components/validation.js";
-import { updateCardList, updateProfileInfo, loadCards, loadUserInfo, patchAvaForm, deleteCardFromServer, likeCard } from "./components/api.js";
+import { patchProfileInfo, deleteCardFromServerApi, deleteLike, putLike, uploadCardOnServer, getCardList, getUserInfo, patchNewAva } from "./components/api.js";
 
 const container = document.querySelector(".places__list");
 const buttonPopupEdit = document.querySelector(".profile__edit-button");
@@ -35,10 +35,7 @@ const validationConfig = {
   inputSelector: ".popup__input",
   errorClass: "popup__input_error",
 };
-const profileInfoUrl = "https://nomoreparties.co/v1/wff-cohort-39/users/me";
-const cardsLoadUrl = "https://nomoreparties.co/v1/wff-cohort-39/cards";
 const updateProfileUrl = "https://nomoreparties.co/v1/wff-cohort-39/users/me";
-const loadCardUrl = "https://nomoreparties.co/v1/wff-cohort-39/cards";
 const myId = "0f8010b070875d80ca6e74f6";
 const deleteUrl = "https://nomoreparties.co/v1/wff-cohort-39/cards/";
 const buttonPopupAva = document.querySelector(".profile__image");
@@ -47,8 +44,163 @@ const popupAvaForm = popupAva.querySelector(".popup__form");
 
 //API part
 
+function likeCard(evt) {
+  const targetClasses = evt.target.classList;
+  const card = evt.target.closest(".card");
+  const likeCounter = card.querySelector(".like_counter");
+
+  if (targetClasses.contains("card__like-button_is-active")) {
+   deleteLike(card)
+      .then((data) => {
+        likeCounter.textContent = data.likes.length;
+        targetClasses.remove("card__like-button_is-active");
+      })
+      .catch((err) => console.log(err));
+  } else {
+    putLike(card)
+      .then((data) => {
+        likeCounter.textContent = data.likes.length;
+        targetClasses.add("card__like-button_is-active");
+      })
+      .catch((err) => console.log(err));
+  }
+}
+
+function deleteCardFromServer(
+  id,
+  element,
+  closePopupFunction,
+  popup
+) {
+deleteCardFromServerApi(id)
+    .then(() => {
+      element.remove();
+      closePopupFunction(popup);
+    })
+    .catch((err) => console.log(err));
+}
+
+function loadUserInfo(name, image, description) {
+  getUserInfo()
+  .then((result) => {
+    name.textContent = result.name;
+    image.style = `background-image: url(${result.avatar})`;
+    description.textContent = result.about;
+  });
+}
+
+function updateProfileInfo(title, description, popup, name, about) {
+  const button = popup.querySelector(".button");
+  button.textContent = "Сохранение...";
+  patchProfileInfo(title, description)
+  .then ((res) => {
+  name.textContent = res.name;
+  about.textContent = res.about;
+  button.textContent = "Сохранить";
+  })
+  .catch((err) => console.log(err));
+}
+
+function updateCardList(
+  title,
+  imageLink,
+  del,
+  like,
+  openImageModal,
+  popupImageImg,
+  popupImage,
+  popupImageTitle,
+  id,
+  delUrl,
+  openModal,
+  delPopup,
+  closeModal,
+  container,
+  addCard,
+  deleteCardFromServer,
+  addPopup
+) {
+  const button = addPopup.querySelector(".button");
+  button.textContent = "Сохранение...";
+  uploadCardOnServer(title, imageLink)
+    .then((result) => {
+      container.prepend(
+        addCard(
+          result.name,
+          result.link,
+          del,
+          like,
+          openImageModal,
+          popupImageImg,
+          popupImage,
+          popupImageTitle,
+          result._id,
+          result.likes.length,
+          id,
+          result.owner._id,
+          delUrl,
+          openModal,
+          delPopup,
+          closeModal,
+          result.likes,
+          deleteCardFromServer
+        )
+      );
+      button.textContent = "Сохранить";
+    })
+    .catch((err) => {
+      console.log(err);
+      button.textContent = "Сохранить";
+    });
+}
+
+function loadCards(
+  container,
+  del,
+  like,
+  openImageModal,
+  popupImageImg,
+  popupImage,
+  popupImageTitle,
+  id,
+  deleteUrl,
+  openModal,
+  delPopup,
+  closeModal,
+  addCard,
+  deleteCardFromServer
+) {
+  getCardList()
+    .then((result) => {
+      result.forEach(function (loadContent) {
+        container.append(
+          addCard(
+            loadContent.name,
+            loadContent.link,
+            del,
+            like,
+            openImageModal,
+            popupImageImg,
+            popupImage,
+            popupImageTitle,
+            loadContent._id,
+            loadContent.likes.length,
+            id,
+            loadContent.owner._id,
+            deleteUrl,
+            openModal,
+            delPopup,
+            closeModal,
+            loadContent.likes,
+            deleteCardFromServer
+          )
+        );
+      });
+    })
+    .catch((err) => console.log(err));
+}
+
 loadCards(
-  cardsLoadUrl,
   container,
   deleteCard,
   likeCard,
@@ -65,7 +217,24 @@ loadCards(
   deleteCardFromServer
 );
 
-loadUserInfo(profileInfoUrl, profileName,  profileImage, profileDescription);
+loadUserInfo(profileName,  profileImage, profileDescription);
+
+function uploadNewAva(popup, popupForm, profileImage, closeModal) {
+  const button = popup.querySelector(".button");
+  button.textContent = "Сохранение...";
+  const newLink = popup.querySelector(".popup__input").value;
+  patchNewAva(newLink)  
+    .then((data) => {
+      profileImage.style = `background-image: url(${data.avatar})`;
+      button.textContent = "Сохранить";
+      popupForm.reset();
+      closeModal(popup);
+    })
+    .catch((err) => {
+      console.log(err);
+      button.textContent = "Сохранить";
+    });
+}
 
 //validation
 
@@ -84,7 +253,7 @@ buttonPopupAva.addEventListener("click", function () {
   openModal(popupAva);
   popupAvaForm.addEventListener("submit", (evt) => {
     evt.preventDefault();
-    patchAvaForm(popupAva, popupAvaForm, profileImage, closeModal);    
+    uploadNewAva(popupAva, popupAvaForm, profileImage, closeModal);    
   });
   clearValidation(popupAvaForm, validationConfig);
 });
@@ -114,7 +283,7 @@ function editFormSubmit(evt, form, name, description, popup, url) {
   evt.preventDefault();
   const nameInput = form.elements.name;
   const jobInput = form.elements.description;
-  updateProfileInfo(url, nameInput.value, jobInput.value, popup, name, description);
+  updateProfileInfo(nameInput.value, jobInput.value, popup, name, description);
   closeModal(popup);  
 }
 
@@ -144,7 +313,6 @@ function addCardSubmit(
 ) {
   evt.preventDefault();
   updateCardList(
-    loadCardUrl,
     inputNameFormNewCard.value,
     inputLinkFormNewCard.value,
     deleteCard,

@@ -101,7 +101,7 @@ export function deleteCard(
 ) {
   openPopupFunction(popup);
   popup.querySelector(".button").addEventListener("click", function (evt) {
-    deleteCardFromServer(url, id, element, closePopupFunction, popup);
+    deleteCardFromServer(id, element, closePopupFunction, popup);
   });
 }
 
