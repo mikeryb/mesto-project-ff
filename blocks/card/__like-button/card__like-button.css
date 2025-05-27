@@ -15,6 +15,15 @@
   transition: 0.3s;
 }
 
+
 .card__like-button:hover {
   opacity: 0.6;
+}
+
+.like_counter {
+  align-content: center;
+  justify-self: center;
+  line-height: 100%;
+  font-size: 13px;
+  margin-top: 3px;
 }

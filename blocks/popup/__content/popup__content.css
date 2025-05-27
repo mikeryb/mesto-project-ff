@@ -9,6 +9,15 @@
   padding: 34px 36px;
 }
 
+.popup_type_delete .popup__content {
+  min-height: 0px;  
+}
+
+.popup_type_new-ava .popup__content {
+  min-height: 0px;
+}
+
+
 @media screen and (max-width: 568px) {
   .popup__content {
     width: 100%;

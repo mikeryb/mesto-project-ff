@@ -7,6 +7,38 @@
   background-size: cover;
   background-position: center;
   margin: 0 29px 0 0;
+  position: relative;
+}
+
+.profile__image:hover::after {
+  display: block;
+  cursor: pointer;
+}
+
+.profile__image:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  display: none;
+  z-index: 2;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.profile__image:hover::before {
+  display: block;
+}
+
+
+.profile__image:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  display: none;
+  z-index: 3;    
+  background-image: url('../../../images/edit-ava.png');
+  background-size: 26px 26px;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 @media screen and (max-width: 740px) {
