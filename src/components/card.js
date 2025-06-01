@@ -1,10 +1,15 @@
+import { deleteLike, putLike, deleteCardFromServerApi } from "./api";
+
 const cardTemplate = document.querySelector("#card-template").content;
+
+function getCardTemplate() {
+  return cardTemplate.querySelector(".card").cloneNode(true);
+}
 
 export function addCard(
   name,
   link,
   del,
-  like,
   openImage,
   popup,
   modal,
@@ -13,14 +18,15 @@ export function addCard(
   likeCount,
   userId,
   cardId,
-  deleteUrl,
   openPopupFunction,
   delPopup,
   closePopupFunction,
   likeArray,
-  deleteCardFromServer
+  deleteCardFromServer,
+  deleteLike,
+  putLike
 ) {
-  const card = cardTemplate.querySelector(".card").cloneNode(true);
+  const card = getCardTemplate();
   const image = card.querySelector(".card__image");
   const likeButton = card.querySelector(".card__like-button");
   image.setAttribute("src", link);
@@ -28,12 +34,11 @@ export function addCard(
   card.setAttribute("id", id);
   card.querySelector(".like_counter").textContent = likeCount;
   card.querySelector(".card__title").textContent = name;
-  testingOwnerOfCard(
+  validateOwnerId(
     userId,
     cardId,
     card,
     id,
-    deleteUrl,
     openPopupFunction,
     delPopup,
     closePopupFunction,
@@ -41,70 +46,74 @@ export function addCard(
     deleteCardFromServer
   );
   likeButton.addEventListener("click", function (evt) {
-    like(evt);
+    likeCard(evt, deleteLike, putLike);
   });
-  testingOfOwnLike(likeArray, userId, likeButton, id);
- image.addEventListener("click", function (evt) {
+  validateOwnerLike(likeArray, userId, likeButton, id);
+  image.addEventListener("click", function (evt) {
     openImage(evt, popup, modal, title);
   });
   return card;
 }
 
-function testingOwnerOfCard(
+function validateOwnerId(
   userId,
   cardId,
   card,
   id,
-  deleteUrl,
   openPopupFunction,
   delPopup,
   closePopupFunction,
   del,
-  deleteCardFromServer
+  deleteCard
 ) {
   const deleteButton = card.querySelector(".card__delete-button");
   if (userId === cardId) {
     deleteButton.addEventListener("click", () =>
-        del(
-          card,
-          id,
-          deleteUrl,
-          openPopupFunction,
-          delPopup,
-          closePopupFunction,
-          deleteCardFromServer
-        )
-      );
+      del(card, id, openPopupFunction, delPopup, closePopupFunction, deleteCard)
+    );
   } else {
     deleteButton.remove();
   }
 }
 
-function testingOfOwnLike(likeArray, userId, button) {
+function validateOwnerLike(likeArray, userId, button) {
   if (likeArray) {
-  likeArray.forEach((element) => {
-    if (element._id === userId) {
-      button.classList.add("card__like-button_is-active");
-      return;
-    }
-  });
-}};
-
-export function deleteCard(
-  element,
-  id,
-  url,
-  openPopupFunction,
-  popup,
-  closePopupFunction, 
-  deleteCardFromServer
-) {
-  openPopupFunction(popup);
-  popup.querySelector(".button").addEventListener("click", function (evt) {
-    deleteCardFromServer(id, element, closePopupFunction, popup);
-  });
+    likeArray.forEach((element) => {
+      if (element._id === userId) {
+        button.classList.add("card__like-button_is-active");
+        return;
+      }
+    });
+  }
 }
 
+function likeCard(evt, deleteLike, putLike) {
+  const targetClasses = evt.target.classList;
+  const card = evt.target.closest(".card");
+  const likeCounter = card.querySelector(".like_counter");
 
+  if (targetClasses.contains("card__like-button_is-active")) {
+    deleteLike(card)
+      .then((data) => {
+        likeCounter.textContent = data.likes.length;
+        targetClasses.remove("card__like-button_is-active");
+      })
+      .catch((err) => console.log(err));
+  } else {
+    putLike(card)
+      .then((data) => {
+        likeCounter.textContent = data.likes.length;
+        targetClasses.add("card__like-button_is-active");
+      })
+      .catch((err) => console.log(err));
+  }
+}
 
-
+export function deleteCard(id, element, closePopupFunction, popup) {
+  deleteCardFromServerApi(id)
+    .then(() => {
+      element.remove();
+      closePopupFunction(popup);
+    })
+    .catch((err) => console.log(err));
+}

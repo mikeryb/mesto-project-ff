@@ -47,8 +47,6 @@ export function getCardList() {
   }).then((res) => testServerAnswer(res));
 }
 
-
-
 export function getUserInfo() {
   return fetch(`${apiConfig.commonUrl}users/me`, {
     headers: {
@@ -57,48 +55,42 @@ export function getUserInfo() {
   }).then((res) => testServerAnswer(res));
 }
 
-
 export function patchNewAva(newLink) {
-return fetch(`${apiConfig.commonUrl}users/me/avatar`, {
+  return fetch(`${apiConfig.commonUrl}users/me/avatar`, {
     method: "PATCH",
     headers: {
       authorization: apiConfig.token,
       "Content-Type": apiConfig.contentType,
     },
     body: JSON.stringify({
-      avatar: newLink
+      avatar: newLink,
     }),
-  })
-    .then((res) => testServerAnswer(res))
+  }).then((res) => testServerAnswer(res));
 }
 
-
 export function deleteCardFromServerApi(id) {
-    return fetch(`${apiConfig.commonUrl}/cards/${id}`, {
+  return fetch(`${apiConfig.commonUrl}/cards/${id}`, {
     method: "DELETE",
     headers: {
       authorization: apiConfig.token,
     },
-  })
-  .then ((res) => testServerAnswer(res))
+  }).then((res) => testServerAnswer(res));
 }
 
 export function deleteLike(card) {
- return fetch(`${apiConfig.commonUrl}cards/likes/${card.id}`, {
-      method: "DELETE",
-      headers: {
-        authorization: apiConfig.token,
-      },
-    })
-      .then((res) => testServerAnswer(res))
+  return fetch(`${apiConfig.commonUrl}cards/likes/${card.id}`, {
+    method: "DELETE",
+    headers: {
+      authorization: apiConfig.token,
+    },
+  }).then((res) => testServerAnswer(res));
 }
 
 export function putLike(card) {
   return fetch(`${apiConfig.commonUrl}cards/likes/${card.id}`, {
-      method: "PUT",
-      headers: {
-        authorization: apiConfig.token,
-      },
-    })
-      .then((res) => testServerAnswer(res))
+    method: "PUT",
+    headers: {
+      authorization: apiConfig.token,
+    },
+  }).then((res) => testServerAnswer(res));
 }
