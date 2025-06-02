@@ -14,7 +14,6 @@ import { openModal, closeModal, addCloseEvents } from "./components/modal.js";
 import { enableValidation, clearValidation } from "./components/validation.js";
 import {
   patchProfileInfo,
-  deleteCardFromServerApi,
   deleteLike,
   putLike,
   uploadCardOnServer,
@@ -47,42 +46,40 @@ const validationConfig = {
 const buttonPopupAva = document.querySelector(".profile__image");
 const popupAva = document.querySelector(".popup_type_new-ava");
 const popupAvaForm = popupAva.querySelector(".popup__form");
+let myId = "";
 
 //API part
 
-loadUserInfo(profileName, profileImage, profileDescription);
-
-function getId() {
-  return getUserInfo().then((result) => {
-    return result._id;
-  });
-}
-
-getId().then((id) => {
-  loadCards(
-    container,
-    openConfirmationPopup,
-    openImageModal,
-    popupImageImg,
-    popupImage,
-    popupImageTitle,
-    id,
-    openModal,
-    delPopup,
-    closeModal,
-    addCard,
-    deleteCard
-  );
-});
-
-function loadUserInfo(name, image, description) {
-  getUserInfo()
-    .then((result) => {
-      name.textContent = result.name;
-      image.style = `background-image: url(${result.avatar})`;
-      description.textContent = result.about;
+function loadData() {
+  Promise.all([getUserInfo(), getCardList()])
+    .then(([userData, cardsData]) => {
+      loadUserInfo(profileName, profileImage, profileDescription, userData);
+      loadCards(
+        container,
+        openConfirmationPopup,
+        openImageModal,
+        popupImageImg,
+        popupImage,
+        popupImageTitle,
+        userData._id,
+        openModal,
+        delPopup,
+        closeModal,
+        addCard,
+        deleteCard,
+        cardsData
+      );
     })
     .catch((err) => console.log(err));
+}
+
+loadData();
+
+function loadUserInfo(name, image, description, userData) {
+  name.textContent = userData.name;
+  image.style = `background-image: url(${userData.avatar})`;
+  description.textContent = userData.about;
+  myId = userData._id;
 }
 
 function updateProfileInfo(title, description, popup, name, about) {
@@ -95,7 +92,9 @@ function updateProfileInfo(title, description, popup, name, about) {
       button.textContent = "Сохранить";
       closeModal(popup);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log(err);
+    });
 }
 
 function updateCardList(
@@ -116,42 +115,40 @@ function updateCardList(
 ) {
   const button = addPopup.querySelector(".button");
   button.textContent = "Сохранение...";
-  getId().then((id) => {
-    uploadCardOnServer(title, imageLink)
-      .then((result) => {
-        container.prepend(
-          addCard(
-            result.name,
-            result.link,
-            del,
-            openImageModal,
-            popupImageImg,
-            popupImage,
-            popupImageTitle,
-            result._id,
-            result.likes.length,
-            id,
-            result.owner._id,
-            openModal,
-            delPopup,
-            closeModal,
-            result.likes,
-            deleteCard,
-            deleteLike,
-            putLike
-          )
-        );
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .finally(() => {
-        button.textContent = "Сохранить";
-        formAddCard.reset();
-        clearValidation(formAddCard, validationConfig);
-        closeModal(addPopup);
-      });
-  });
+  uploadCardOnServer(title, imageLink)
+    .then((result) => {
+      container.prepend(
+        addCard(
+          result.name,
+          result.link,
+          del,
+          openImageModal,
+          popupImageImg,
+          popupImage,
+          popupImageTitle,
+          result._id,
+          result.likes.length,
+          myId,
+          result.owner._id,
+          openModal,
+          delPopup,
+          closeModal,
+          result.likes,
+          deleteCard,
+          deleteLike,
+          putLike
+        )
+      );
+      formAddCard.reset();
+      clearValidation(formAddCard, validationConfig);
+      closeModal(addPopup);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() => {
+      button.textContent = "Сохранить";
+    });
 }
 
 function loadCards(
@@ -166,36 +163,33 @@ function loadCards(
   delPopup,
   closeModal,
   addCard,
-  deleteCard
+  deleteCard,
+  cardsData
 ) {
-  getCardList()
-    .then((result) => {
-      result.forEach(function (loadContent) {
-        container.append(
-          addCard(
-            loadContent.name,
-            loadContent.link,
-            del,
-            openImageModal,
-            popupImageImg,
-            popupImage,
-            popupImageTitle,
-            loadContent._id,
-            loadContent.likes.length,
-            id,
-            loadContent.owner._id,
-            openModal,
-            delPopup,
-            closeModal,
-            loadContent.likes,
-            deleteCard,
-            deleteLike,
-            putLike
-          )
-        );
-      });
-    })
-    .catch((err) => console.log(err));
+  cardsData.forEach(function (loadContent) {
+    container.append(
+      addCard(
+        loadContent.name,
+        loadContent.link,
+        del,
+        openImageModal,
+        popupImageImg,
+        popupImage,
+        popupImageTitle,
+        loadContent._id,
+        loadContent.likes.length,
+        id,
+        loadContent.owner._id,
+        openModal,
+        delPopup,
+        closeModal,
+        loadContent.likes,
+        deleteCard,
+        deleteLike,
+        putLike
+      )
+    );
+  });
 }
 
 function uploadNewAva(popup, popupForm, profileImage, closeModal) {
